@@ -1,0 +1,65 @@
+@page "/testdir"
+@using BlazorApp2.Client.BlazorBlob
+
+
+@rendermode InteractiveWebAssembly
+@inject IJSRuntime _jsRuntime;
+@inject BlobStreamService _blobStreamService;
+
+
+<h3>TestDir</h3>
+
+@if (isInitializing)
+{
+<div class="loading">
+    <p>加载中...</p>
+</div>
+}
+else
+{
+    <div style="display: flex; justify-content: space-between;">
+        <InputFile @ref="inputFiles" multiple webkitdirectory OnChange="OnFileSelected"/>
+        @* <button @onclick="RequestDirectoryPermission">选择目录并加密</button> *@
+
+    </div>
+}
+@if (files!=null)
+{
+    <ul>
+        @foreach (var file in files)
+        {
+            <li style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="width: 30%;">@file.Name</span>
+        
+            </li>
+        }
+    </ul>
+}
+
+
+
+@code {
+    InputFile inputFiles = default!;
+    private bool isInitializing = true;
+    private long maxFileSize = 0;
+    private IReadOnlyList<IBrowserFile>? files;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _blobStreamService.init();  
+            isInitializing = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnFileSelected(InputFileChangeEventArgs e)
+    {
+        files = await _blobStreamService!.GetBrowserFilesAsync(inputFiles);
+        StateHasChanged();
+    }
+    
+    
+}
+
